@@ -15,9 +15,9 @@ const GRID_SIZE = 50;
  * @param {import("./App").OverlapStyle} overlapStyle
  * @param {string} output
  */
-export function pdfPreview(image, dpi, paper, overlap, gridPlacement, overlapPosition, overlapStyle, output) {
+export function pdfPreview(image, dpi, paper, overlap, gridPlacement, overlapPosition, overlapStyle, output, margin = 0) {
 
-  const spec = tiler(image.width, image.height, dpi, paper, overlap);
+  const spec = tiler(image.width, image.height, dpi, paper, overlap, margin);
 
   const format = [paper.width, paper.height];
   const orientation = paper.width < paper.height ? "p" : "l";
@@ -37,7 +37,7 @@ export function pdfPreview(image, dpi, paper, overlap, gridPlacement, overlapPos
         doc.addPage(format, orientation);
       }
 
-      doc.addImage(image, "JPEG", -offsetX, -offsetY, spec.widthMM, spec.heightMM);
+      doc.addImage(image, "JPEG", margin - offsetX, margin - offsetY, spec.widthMM, spec.heightMM);
 
       /*
         * Overlap Borders
@@ -53,28 +53,28 @@ export function pdfPreview(image, dpi, paper, overlap, gridPlacement, overlapPos
         if (overlapPosition === "Both" || overlapPosition === "NW" || overlapPosition === "SW") {
           // Left Edge
           if (i > 0) {
-            doc.line(overlap, 0, overlap, paper.height);
+            doc.line(margin + overlap, 0, margin + overlap, paper.height);
           }
         }
 
         if (overlapPosition === "Both" || overlapPosition === "NE" || overlapPosition === "NW") {
           // Top Edge
           if (j > 0) {
-            doc.line(0, overlap, paper.width, overlap);
+            doc.line(0, margin + overlap, paper.width, margin + overlap);
           }
         }
 
         if (overlapPosition === "Both" || overlapPosition === "NE" || overlapPosition === "SE") {
           // Right Edge
           if (i < spec.hSheets - 1) {
-            doc.line(paper.width - overlap, 0, paper.width - overlap, paper.height);
+            doc.line(paper.width - margin - overlap, 0, paper.width - margin - overlap, paper.height);
           }
         }
 
         if (overlapPosition === "Both" || overlapPosition === "SE" || overlapPosition === "SW") {
           // Bottom Edge
           if (j < spec.vSheets - 1) {
-            doc.line(0, paper.height - overlap, paper.width, paper.height - overlap);
+            doc.line(0, paper.height - margin - overlap, paper.width, paper.height - margin - overlap);
           }
         }
       }
@@ -102,9 +102,9 @@ export function pdfPreview(image, dpi, paper, overlap, gridPlacement, overlapPos
         const datumX = GRID_SIZE * Math.floor(offsetX / GRID_SIZE);
 
         // Datum values relative to page
-        const x = datumX - offsetX;
-        const y1 = datumY1 - offsetY;
-        const y2 = datumY2 - offsetY;
+        const x = datumX - offsetX + margin;
+        const y1 = datumY1 - offsetY + margin;
+        const y2 = datumY2 - offsetY + margin;
 
         for (let t = GRID_SIZE; t < max; t += GRID_SIZE) {
           // SW-NE

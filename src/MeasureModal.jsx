@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Modal } from "./Modal";
 
-const PREVIEW_SIZE = 500;
+const PREVIEW_SIZE = 800;
 const INCH_TO_MM = 25.4;
 
 /** @typedef {[number,number]} Point */

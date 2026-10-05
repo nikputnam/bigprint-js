@@ -16,9 +16,10 @@ import { useImage } from "./useImage";
  * @param {import("./App").OverlapStyle} props.overlapStyle
  * @param {boolean} props.grid
  * @param {(image: HTMLImageElement, paper: Paper) => void} props.onGenerate
+ * @param {number} props.margin
  * @param {(overlap: number) => void} props.setOverlap
  */
-export function ImagePreview({ src, paper, dpi, overlap, grid, onGenerate, overlapStyle, overlapPosition }) {
+export function ImagePreview({ src, paper, dpi, overlap, grid, onGenerate, overlapStyle, overlapPosition, margin = 0 }) {
     const image = useImage(src);
     const canvasRef = useRef(/** @type {HTMLCanvasElement?} */(null));
     const [generated, setGenerated] = useState(false);
@@ -32,20 +33,24 @@ export function ImagePreview({ src, paper, dpi, overlap, grid, onGenerate, overl
 
     useEffect(() => {
         setGenerated(false);
-    }, [image, paper, dpi, overlap, grid, overlapPosition, overlapStyle]);
+    }, [image, paper, dpi, overlap, grid, overlapPosition, overlapStyle, margin]);
 
     useEffect(() => {
         if (!image || dpi <= 0 || overlap >= paper.width || overlap >= paper.height) {
             return;
         }
 
-        const spec = tiler(image.width, image.height, dpi, paper, overlap);
+        const spec = tiler(image.width, image.height, dpi, paper, overlap, margin);
 
-        const paperRatio = spec.totalHeightMM / spec.totalWidthMM;
+        // Display dimensions cover full paper area (including margins)
+        const displayTotalWidthMM = (spec.hSheets - 1) * spec.paperWidthWithOverlap + paper.width;
+        const displayTotalHeightMM = (spec.vSheets - 1) * spec.paperHeightWithOverlap + paper.height;
+
+        const paperRatio = displayTotalHeightMM / displayTotalWidthMM;
 
         const screenHeight = screenWidth * paperRatio;
 
-        const screenPixelsPerMM = screenWidth / spec.totalWidthMM;
+        const screenPixelsPerMM = screenWidth / displayTotalWidthMM;
 
         if (canvasRef.current && spec.paperWidthWithOverlap > 0 && spec.paperHeightWithOverlap > 0) {
 
@@ -102,7 +107,7 @@ export function ImagePreview({ src, paper, dpi, overlap, grid, onGenerate, overl
     }, [
         image, paper,
         paper.width, paper.height,
-        dpi, overlap,
+        dpi, overlap, margin,
         grid,
     ]);
 
@@ -110,12 +115,18 @@ export function ImagePreview({ src, paper, dpi, overlap, grid, onGenerate, overl
         return null;
     }
 
-    const spec = tiler(image.width, image.height, dpi, paper, overlap);
+    const spec = tiler(image.width, image.height, dpi, paper, overlap, margin);
 
-    const imageScale = spec.widthMM / spec.totalWidthMM;
+    const displayTotalWidthMM = (spec.hSheets - 1) * spec.paperWidthWithOverlap + paper.width;
+    const displayTotalHeightMM = (spec.vSheets - 1) * spec.paperHeightWithOverlap + paper.height;
+
+    const screenPixelsPerMM = screenWidth / displayTotalWidthMM;
+    const imageScale = spec.widthMM / displayTotalWidthMM;
     const imageWidth = screenWidth * imageScale;
+    const imageOffsetX = margin * screenPixelsPerMM;
+    const imageOffsetY = margin * screenPixelsPerMM;
 
-    const paperRatio = spec.totalHeightMM / spec.totalWidthMM;
+    const paperRatio = displayTotalHeightMM / displayTotalWidthMM;
     const screenHeight = screenWidth * paperRatio;
 
     function handleGenerate() {
@@ -159,7 +170,7 @@ export function ImagePreview({ src, paper, dpi, overlap, grid, onGenerate, overl
                 textAlign: "left",
                 background: "#EEEEEE",
             }}>
-                <img src={src} style={{ width: imageWidth }} alt={`${paper.label} Preview`} />
+                <img src={src} style={{ width: imageWidth, marginLeft: imageOffsetX, marginTop: imageOffsetY }} alt={`${paper.label} Preview`} />
                 <canvas
                     ref={canvasRef}
                     width={screenWidth * devicePixelRatio + border * 2 * devicePixelRatio}

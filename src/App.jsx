@@ -8,6 +8,20 @@ import { pdfPreview } from './pdfPreview';
 // Paper sizes in mm
 const PAPER_SIZES = [
   {
+    label: "US Letter Portrait",
+    format: "letter",
+    orientation: "p",
+    width: 215.9,
+    height: 279.4,
+  },
+  {
+    label: "US Letter Landscape",
+    format: "letter",
+    orientation: "l",
+    width: 279.4,
+    height: 215.9,
+  },
+  {
     label: "A4 Portrait",
     format: "a4",
     orientation: "p",
@@ -53,6 +67,7 @@ function App() {
   const [gridPlacement, setGridPlacement] = useState(/** @type {GridPlacement} */("None"));
   const [overlapStyle, setOverlapStyle] = useState(/** @type {OverlapStyle} */("Dashed"));
   const [overlapPosition, setOverlapPosition] = useState(/** @type {OverlapPosition} */("Both"));
+  const [margin, setMargin] = useState(5);
 
   const [isMeasureModalVisible, setIsMeasureModalVisible] = useState(false);
 
@@ -98,7 +113,7 @@ function App() {
       // Hmmmm, very much non-react...
       outputEl.innerHTML = `<p style="margin: 1em 0.5em;">Generating...</p>`;
       setTimeout(() => {
-        pdfPreview(image, dpi, paper, overlap, gridPlacement, overlapPosition, overlapStyle, "#pdf-preview");
+        pdfPreview(image, dpi, paper, overlap, gridPlacement, overlapPosition, overlapStyle, "#pdf-preview", margin);
       }, 0);
     }
   }
@@ -133,6 +148,10 @@ function App() {
           <label>
             Overlap
             <input type="number" value={overlap} onChange={e => setOverlap(+e.target.value)} /> mm
+          </label>
+          <label>
+            Printer Margin
+            <input type="number" value={margin} onChange={e => setMargin(+e.target.value)} /> mm
           </label>
           <label>
             Show Diagonal Grid{' '}
@@ -187,6 +206,7 @@ function App() {
                   setOverlap={setOverlap}
                   overlapPosition={overlapPosition}
                   overlapStyle={overlapStyle}
+                  margin={margin}
                 />
               </div>
             )) :
